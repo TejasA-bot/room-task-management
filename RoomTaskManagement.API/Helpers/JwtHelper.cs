@@ -17,6 +17,8 @@ namespace RoomTaskManagement.API.Helpers
 
 		public string GenerateToken(UserDto user)
 		{
+			ArgumentNullException.ThrowIfNull(user);
+
 			var jwtSettings = _configuration.GetSection("JwtSettings");
 			var secretKey = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]!);
 

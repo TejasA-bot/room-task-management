@@ -1,8 +1,11 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using RoomTaskManagement.API.BusinessLogic;
 using RoomTaskManagement.API.Data;
+using RoomTaskManagement.API.Helpers;
+using RoomTaskManagement.API.Hubs;
 using RoomTaskManagement.API.Repositories.Implementations;
 using RoomTaskManagement.API.Repositories.Interfaces;
 using RoomTaskManagement.API.Services.Implementations;
@@ -16,7 +19,41 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+	c.SwaggerDoc("v1", new OpenApiInfo
+	{
+		Title = "Room Task Management API",
+		Version = "v1"
+	});
+
+	// JWT Bearer configuration
+	c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+	{
+		Name = "Authorization",
+		Type = SecuritySchemeType.Http,
+		Scheme = "Bearer",
+		BearerFormat = "JWT",
+		In = ParameterLocation.Header,
+		Description = "Enter: Bearer {your JWT token}"
+	});
+
+	c.AddSecurityRequirement(new OpenApiSecurityRequirement
+	{
+		{
+			new OpenApiSecurityScheme
+			{
+				Reference = new OpenApiReference
+				{
+					Type = ReferenceType.SecurityScheme,
+					Id = "Bearer"
+				}
+			},
+			new string[] {}
+		}
+	});
+});
+
 
 //Database
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -29,6 +66,8 @@ builder.Services.AddScoped<ITaskHistoryRepository, TaskHistoryRepository>();
 
 //Buisness Logic
 builder.Services.AddScoped<TaskTurnCalculator>();
+builder.Services.AddScoped<JwtHelper>();
+builder.Services.AddScoped<TaskAssignmentRepository>();
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -88,5 +127,8 @@ app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Map SignalR Hub
+app.MapHub<TaskHub>("/taskHub");
 
 app.Run();

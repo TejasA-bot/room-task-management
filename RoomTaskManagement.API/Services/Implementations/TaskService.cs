@@ -61,6 +61,9 @@ namespace RoomTaskManagement.API.Services.Implementations
 
 		public async Task<TaskDto?> GetTaskByIdAsync(int id)
 		{
+			if(id < 1)
+				return null;
+
 			var task = await _taskRepository.GetTaskWithAssignmentsAsync(id);
 			if (task == null)
 				return null;
@@ -83,6 +86,12 @@ namespace RoomTaskManagement.API.Services.Implementations
 
 		public async Task<TaskDto> CreateTaskAsync(CreateTaskRequest request, int createdBy)
 		{
+			if (string.IsNullOrWhiteSpace(request.TaskName))
+				throw new ArgumentException("Task name cannot be empty.");
+
+			if(request == null)
+				throw new ArgumentNullException(nameof(request));
+
 			var task = new TaskEntity
 			{
 				TaskName = request.TaskName,
@@ -110,6 +119,9 @@ namespace RoomTaskManagement.API.Services.Implementations
 
 		public async Task<bool> TriggerTaskAsync(TriggerTaskRequest request)
 		{
+			if (request == null || request.TaskId < 1 || request.TriggeredBy < 1)
+				throw new ArgumentNullException(nameof(request));
+
 			// Check if task exists
 			var task = await _taskRepository.GetByIdAsync(request.TaskId);
 			if (task == null || !task.IsActive)
@@ -156,6 +168,9 @@ namespace RoomTaskManagement.API.Services.Implementations
 
 		public async Task<bool> CompleteTaskAsync(int taskId, int userId)
 		{
+			if (taskId < 1 || userId < 1)
+				return false;
+
 			var activeAssignment = await _taskAssignmentRepository.GetActiveAssignmentForTaskAsync(taskId);
 
 			if (activeAssignment == null || activeAssignment.UserId != userId)
@@ -182,6 +197,8 @@ namespace RoomTaskManagement.API.Services.Implementations
 
 		public async Task<bool> DeleteTaskAsync(int taskId)
 		{
+			if (taskId < 1) throw new ArgumentException("Invalid task ID.");
+
 			var task = await _taskRepository.GetByIdAsync(taskId);
 			if (task == null)
 				return false;

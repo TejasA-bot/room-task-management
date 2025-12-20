@@ -21,6 +21,9 @@ namespace RoomTaskManagement.API.Services.Implementations
 
 		public async Task<LoginResponse?> LoginAsync(LoginRequest request)
 		{
+			if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+				return null;
+
 			var user = await _userRepository.GetByUsernameAsync(request.Username);
 
 			if (user == null)
@@ -42,6 +45,18 @@ namespace RoomTaskManagement.API.Services.Implementations
 
 		public async Task<UserDto?> CreateUserAsync(CreateUserRequest request, int createdBy)
 		{
+			// Basic validation
+			if (string.IsNullOrWhiteSpace(request.Username) ||
+				string.IsNullOrWhiteSpace(request.Password) ||
+				string.IsNullOrWhiteSpace(request.FullName) ||
+				string.IsNullOrWhiteSpace(request.PhoneNumber) ||
+				string.IsNullOrWhiteSpace(request.Role))
+			{
+				return null;
+			}
+
+			if(createdBy < 1) return null;
+
 			// Check if username already exists
 			var existingUser = await _userRepository.GetByUsernameAsync(request.Username);
 			if (existingUser != null)

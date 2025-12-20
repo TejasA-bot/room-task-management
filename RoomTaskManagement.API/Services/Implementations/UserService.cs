@@ -29,6 +29,8 @@ namespace RoomTaskManagement.API.Services.Implementations
 
 		public async Task<UserDto?> GetUserByIdAsync(int id)
 		{
+			if(id < 1) throw new ArgumentException("Invalid user ID.");
+
 			var user = await _userRepository.GetByIdAsync(id);
 			if (user == null)
 				return null;
@@ -46,6 +48,8 @@ namespace RoomTaskManagement.API.Services.Implementations
 
 		public async Task<bool> ToggleOutOfStationAsync(int userId)
 		{
+			if (userId < 1) throw new ArgumentException("Invalid user ID.");
+
 			var user = await _userRepository.GetByIdAsync(userId);
 			if (user == null)
 				return false;
@@ -59,6 +63,9 @@ namespace RoomTaskManagement.API.Services.Implementations
 
 		public async Task<bool> UpdateUserAsync(int userId, UserDto userDto)
 		{
+			if (userId < 1) throw new ArgumentException("Invalid user ID.");
+			if (userDto == null) throw new ArgumentNullException(nameof(userDto));
+
 			var user = await _userRepository.GetByIdAsync(userId);
 			if (user == null)
 				return false;
@@ -74,6 +81,8 @@ namespace RoomTaskManagement.API.Services.Implementations
 
 		public async Task<bool> DeleteUserAsync(int userId)
 		{
+			if (userId < 1) throw new ArgumentException("Invalid user ID.");
+
 			var user = await _userRepository.GetByIdAsync(userId);
 			if (user == null || user.Role == "SuperAdmin")
 				return false;
