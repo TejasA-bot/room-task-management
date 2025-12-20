@@ -1,0 +1,49 @@
+<mat-toolbar color="primary">
+    <span class="logo">🏠 Room Task Manager</span>
+    
+    <span class="spacer"></span>
+    
+    <button mat-button routerLink="/dashboard" routerLinkActive="active">
+      <mat-icon>dashboard</mat-icon>
+      Dashboard
+    </button>
+    
+    <button mat-button routerLink="/tasks" routerLinkActive="active">
+      <mat-icon>task</mat-icon>
+      Tasks
+    </button>
+    
+    <button mat-button routerLink="/members" routerLinkActive="active" 
+            *ngIf="currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin'">
+      <mat-icon>people</mat-icon>
+      Members
+    </button>
+  
+    <button mat-icon-button [matMenuTriggerFor]="menu" *ngIf="currentUser">
+      <mat-icon [matBadge]="currentUser.isOutOfStation ? '!' : ''" 
+                [matBadgeColor]="currentUser.isOutOfStation ? 'warn' : 'primary'">
+        account_circle
+      </mat-icon>
+    </button>
+    
+    <mat-menu #menu="matMenu">
+      <div class="user-info" mat-menu-item disabled>
+        <strong>{{ currentUser?.fullName }}</strong>
+        <br>
+        <small>{{ currentUser?.role }}</small>
+      </div>
+      
+      <mat-divider></mat-divider>
+      
+      <button mat-menu-item (click)="toggleOutOfStation()">
+        <mat-icon>{{ currentUser?.isOutOfStation ? 'home' : 'flight_takeoff' }}</mat-icon>
+        <span>{{ currentUser?.isOutOfStation ? 'I\'m Back' : 'Out of Station' }}</span>
+      </button>
+      
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+  </mat-toolbar>
+  

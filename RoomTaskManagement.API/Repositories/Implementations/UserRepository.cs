@@ -13,7 +13,7 @@ namespace RoomTaskManagement.API.Repositories.Implementations
 
 		public async Task<User?> GetByUsernameAsync(string username) => await _dbSet.FirstOrDefaultAsync(u => u.Username == username);
 
-		public async Task<IEnumerable<User>> GetActiveUsersAsync() => await _dbSet.Where(u => !"Deleted".Equals(u.Role, StringComparison.InvariantCultureIgnoreCase)).ToListAsync();
+		public async Task<IEnumerable<User>> GetActiveUsersAsync() => await _dbSet.Where(u => u.Role != "Deleted").ToListAsync();
 
 		public async Task<IEnumerable<User>> GetAvailableUsersAsync() => await _dbSet.Where(u => !u.IsOutOfStation).ToListAsync();
 	}

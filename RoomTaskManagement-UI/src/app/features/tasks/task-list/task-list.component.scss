@@ -1,0 +1,44 @@
+.container {
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  
+    h1 {
+      margin: 0;
+    }
+  
+    button mat-icon {
+      margin-right: 8px;
+    }
+  }
+  
+  .full-width {
+    width: 100%;
+  }
+  
+  table {
+    mat-chip {
+      font-size: 12px;
+    }
+  }
+  
+  .no-data {
+    text-align: center;
+    padding: 48px 24px;
+    color: #999;
+  
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+    }
+  }
+  

@@ -1,0 +1,94 @@
+<div class="container">
+    <div class="header">
+      <h1>Member Management</h1>
+      <button mat-raised-button color="primary" (click)="openCreateDialog()" *ngIf="canManageMembers()">
+        <mat-icon>person_add</mat-icon>
+        Add Member
+      </button>
+    </div>
+  
+    <mat-card>
+      <mat-card-content>
+        <table mat-table [dataSource]="members" class="full-width">
+          
+          <!-- Full Name Column -->
+          <ng-container matColumnDef="fullName">
+            <th mat-header-cell *matHeaderCellDef>Full Name</th>
+            <td mat-cell *matCellDef="let member">
+              <div class="name-cell">
+                <mat-icon>person</mat-icon>
+                {{ member.fullName }}
+              </div>
+            </td>
+          </ng-container>
+  
+          <!-- Username Column -->
+          <ng-container matColumnDef="username">
+            <th mat-header-cell *matHeaderCellDef>Username</th>
+            <td mat-cell *matCellDef="let member">{{ member.username }}</td>
+          </ng-container>
+  
+          <!-- Phone Number Column -->
+          <ng-container matColumnDef="phoneNumber">
+            <th mat-header-cell *matHeaderCellDef>Phone Number</th>
+            <td mat-cell *matCellDef="let member">
+              <div class="phone-cell">
+                <mat-icon>phone</mat-icon>
+                {{ member.phoneNumber }}
+              </div>
+            </td>
+          </ng-container>
+  
+          <!-- Role Column -->
+          <ng-container matColumnDef="role">
+            <th mat-header-cell *matHeaderCellDef>Role</th>
+            <td mat-cell *matCellDef="let member">
+              <mat-chip [color]="getRoleBadgeColor(member.role)" selected>
+                {{ member.role }}
+              </mat-chip>
+            </td>
+          </ng-container>
+  
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let member">
+              <mat-chip [color]="member.isOutOfStation ? 'warn' : 'accent'" selected>
+                <mat-icon>{{ member.isOutOfStation ? 'flight_takeoff' : 'home' }}</mat-icon>
+                {{ member.isOutOfStation ? 'Out of Station' : 'Available' }}
+              </mat-chip>
+            </td>
+          </ng-container>
+  
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let member">
+              <button mat-icon-button 
+                      [color]="member.isOutOfStation ? 'accent' : 'warn'"
+                      (click)="toggleMemberStatus(member)"
+                      [matTooltip]="member.isOutOfStation ? 'Mark as Available' : 'Mark Out of Station'">
+                <mat-icon>{{ member.isOutOfStation ? 'home' : 'flight_takeoff' }}</mat-icon>
+              </button>
+              
+              <button mat-icon-button color="warn" 
+                      (click)="deleteMember(member)" 
+                      *ngIf="canManageMembers() && member.role !== 'SuperAdmin'"
+                      matTooltip="Delete Member">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+  
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+  
+        <div class="no-data" *ngIf="members.length === 0">
+          <mat-icon>people_outline</mat-icon>
+          <p>No members found. Add your first member!</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  

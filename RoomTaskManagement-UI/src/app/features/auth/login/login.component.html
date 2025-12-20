@@ -1,0 +1,31 @@
+<div class="login-container">
+    <mat-card class="login-card">
+      <mat-card-header>
+        <mat-card-title>Room Task Management</mat-card-title>
+        <mat-card-subtitle>Login to continue</mat-card-subtitle>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Username</mat-label>
+            <input matInput formControlName="username" placeholder="Enter username">
+            <mat-icon matPrefix>person</mat-icon>
+          </mat-form-field>
+  
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Password</mat-label>
+            <input matInput type="password" formControlName="password" placeholder="Enter password">
+            <mat-icon matPrefix>lock</mat-icon>
+          </mat-form-field>
+  
+          <button mat-raised-button color="primary" type="submit" class="full-width" 
+                  [disabled]="loginForm.invalid || isLoading">
+            <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+            <span *ngIf="!isLoading">Login</span>
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  

@@ -1,0 +1,112 @@
+<div class="container">
+    <h1>Dashboard</h1>
+  
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <mat-card>
+        <mat-card-content>
+          <div class="stat-content">
+            <mat-icon color="primary">task_alt</mat-icon>
+            <div>
+              <h2>{{ stats.totalTasks }}</h2>
+              <p>Total Tasks</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+  
+      <mat-card>
+        <mat-card-content>
+          <div class="stat-content">
+            <mat-icon color="accent">schedule</mat-icon>
+            <div>
+              <h2>{{ stats.activeTasks }}</h2>
+              <p>Active Tasks</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+  
+      <mat-card>
+        <mat-card-content>
+          <div class="stat-content">
+            <mat-icon color="warn">pending_actions</mat-icon>
+            <div>
+              <h2>{{ stats.myPendingTasks }}</h2>
+              <p>My Pending Tasks</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+  
+      <mat-card>
+        <mat-card-content>
+          <div class="stat-content">
+            <mat-icon color="primary">people</mat-icon>
+            <div>
+              <h2>{{ stats.availableMembers }}</h2>
+              <p>Available Members</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  
+    <!-- Tasks Overview -->
+    <mat-card class="tasks-card">
+      <mat-card-header>
+        <mat-card-title>Current Tasks</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="tasks-list" *ngIf="tasks.length > 0; else noTasks">
+          <mat-card *ngFor="let task of tasks" class="task-item">
+            <mat-card-content>
+              <div class="task-header">
+                <h3>{{ task.taskName }}</h3>
+                <mat-chip [color]="getStatusColor(task.currentStatus)" selected>
+                  {{ task.currentStatus }}
+                </mat-chip>
+              </div>
+              
+              <p class="task-description" *ngIf="task.description">{{ task.description }}</p>
+              
+              <div class="task-info">
+                <span *ngIf="task.currentAssignedTo">
+                  <mat-icon>person</mat-icon>
+                  Assigned to: <strong>{{ task.currentAssignedTo }}</strong>
+                </span>
+                <span *ngIf="!task.currentAssignedTo">
+                  <mat-icon>check_circle</mat-icon>
+                  Available for triggering
+                </span>
+              </div>
+  
+              <div class="task-actions">
+                <button mat-raised-button color="primary" 
+                        (click)="triggerTask(task)"
+                        [disabled]="!task.canTrigger">
+                  <mat-icon>play_arrow</mat-icon>
+                  Trigger Task
+                </button>
+  
+                <button mat-raised-button color="accent" 
+                        (click)="completeTask(task)"
+                        *ngIf="task.currentAssignedTo === currentUser?.fullName && task.currentStatus === 'InProgress'">
+                  <mat-icon>check</mat-icon>
+                  Mark Complete
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+  
+        <ng-template #noTasks>
+          <div class="no-data">
+            <mat-icon>inbox</mat-icon>
+            <p>No tasks available. Create your first task!</p>
+          </div>
+        </ng-template>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  
