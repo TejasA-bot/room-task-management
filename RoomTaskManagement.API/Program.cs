@@ -148,20 +148,50 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// Auto-run migrations in production
+// Run migrations and seed data in production
 if (app.Environment.IsProduction())
 {
 	using (var scope = app.Services.CreateScope())
 	{
+		var services = scope.ServiceProvider;
 		try
 		{
-			var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-			dbContext.Database.Migrate();
-			Console.WriteLine("Database migrations applied successfully");
+			var context = services.GetRequiredService<ApplicationDbContext>();
+
+			// Apply pending migrations
+			Console.WriteLine("🔄 Applying database migrations...");
+			context.Database.Migrate();
+			Console.WriteLine("✅ Migrations applied successfully");
+
+			// Seed SuperAdmin if doesn't exist
+			if (!context.Users.Any(u => u.Username == "superadmin"))
+			{
+				Console.WriteLine("🔄 Creating SuperAdmin user...");
+				var superAdmin = new RoomTaskManagement.API.Models.Entities.User
+				{
+					Username = "superadmin",
+					PasswordHash = "$2a$11$O9tFsJI8e/6o.rKD7T5Ts.DAnqLBPiXmqNINHDfEnCacey394O1xu",
+					FullName = "Super Administrator",
+					PhoneNumber = "9999999999",
+					Role = "SuperAdmin",
+					IsOutOfStation = false,
+					CreatedAt = new DateTime(2024, 01, 01),
+					UpdatedAt = new DateTime(2024, 01, 01)
+				};
+
+				context.Users.Add(superAdmin);
+				context.SaveChanges();
+				Console.WriteLine("✅ SuperAdmin created: username=superadmin, password=Admin@2001");
+			}
+			else
+			{
+				Console.WriteLine("✅ SuperAdmin already exists");
+			}
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine($"Migration failed: {ex.Message}");
+			Console.WriteLine($"❌ Database setup failed: {ex.Message}");
+			Console.WriteLine($"Stack trace: {ex.StackTrace}");
 		}
 	}
 }
@@ -176,7 +206,13 @@ if (app.Environment.IsProduction())
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
+// Only use HTTPS redirect in development
+if (app.Environment.IsDevelopment())
+{
+	app.UseHttpsRedirection();
+}
+
 app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();

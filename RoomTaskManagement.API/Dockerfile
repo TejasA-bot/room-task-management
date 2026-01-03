@@ -1,8 +1,7 @@
 ﻿# Use official .NET 8 runtime as base
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
+EXPOSE 10000
 
 # Use .NET SDK for building
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -26,7 +25,7 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-# Set environment variable
-ENV ASPNETCORE_URLS=http://+:8080
+# Set environment variable for port 10000 (Render default)
+ENV ASPNETCORE_URLS=http://+:10000
 
 ENTRYPOINT ["dotnet", "RoomTaskManagement.API.dll"]
