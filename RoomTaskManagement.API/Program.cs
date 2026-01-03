@@ -148,12 +148,33 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Auto-run migrations in production
+if (app.Environment.IsProduction())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+	using (var scope = app.Services.CreateScope())
+	{
+		try
+		{
+			var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+			dbContext.Database.Migrate();
+			Console.WriteLine("Database migrations applied successfully");
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Migration failed: {ex.Message}");
+		}
+	}
 }
+
+// Configure the HTTP request pipeline.
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI();
+//}
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAngular");
