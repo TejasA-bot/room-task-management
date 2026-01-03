@@ -68,13 +68,19 @@ builder.Services.AddHttpClient();
 //var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 //Database
 //Database
+//Database
 var connectionString = builder.Environment.IsProduction()
 	? Environment.GetEnvironmentVariable("DATABASE_URL")
 	: builder.Configuration.GetConnectionString("DefaultConnection");
 
+// Log for debugging
+Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
+Console.WriteLine($"Connection String Length: {connectionString?.Length ?? 0}");
+Console.WriteLine($"DATABASE_URL env var: {Environment.GetEnvironmentVariable("DATABASE_URL")?.Substring(0, 20) ?? "NULL"}...");
+
 if (string.IsNullOrEmpty(connectionString))
 {
-	throw new InvalidOperationException("Database connection string is not configured!");
+	throw new InvalidOperationException("❌ DATABASE_URL environment variable is not set!");
 }
 
 if (builder.Environment.IsProduction())
@@ -87,18 +93,6 @@ else
 	builder.Services.AddDbContext<ApplicationDbContext>(options =>
 		options.UseSqlServer(connectionString));
 }
-
-if (builder.Environment.IsProduction())
-{
-	builder.Services.AddDbContext<ApplicationDbContext>(options =>
-		options.UseNpgsql(connectionString));
-}
-else
-{
-	builder.Services.AddDbContext<ApplicationDbContext>(options =>
-		options.UseSqlServer(connectionString));
-}
-
 
 //Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
