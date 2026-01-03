@@ -65,7 +65,28 @@ builder.Services.AddHttpClient();
 //Database
 //builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 //Database
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+//var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+//Database
+//Database
+var connectionString = builder.Environment.IsProduction()
+	? Environment.GetEnvironmentVariable("DATABASE_URL")
+	: builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrEmpty(connectionString))
+{
+	throw new InvalidOperationException("Database connection string is not configured!");
+}
+
+if (builder.Environment.IsProduction())
+{
+	builder.Services.AddDbContext<ApplicationDbContext>(options =>
+		options.UseNpgsql(connectionString));
+}
+else
+{
+	builder.Services.AddDbContext<ApplicationDbContext>(options =>
+		options.UseSqlServer(connectionString));
+}
 
 if (builder.Environment.IsProduction())
 {
