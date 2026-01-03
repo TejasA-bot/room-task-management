@@ -69,18 +69,18 @@ builder.Services.AddHttpClient();
 //Database
 //Database
 //Database
+//Database
 var connectionString = builder.Environment.IsProduction()
-	? Environment.GetEnvironmentVariable("DATABASE_URL")
+	? ConvertPostgresUrl(Environment.GetEnvironmentVariable("DATABASE_URL"))
 	: builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Log for debugging
 Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
 Console.WriteLine($"Connection String Length: {connectionString?.Length ?? 0}");
-Console.WriteLine($"DATABASE_URL env var: {Environment.GetEnvironmentVariable("DATABASE_URL")?.Substring(0, 20) ?? "NULL"}...");
 
 if (string.IsNullOrEmpty(connectionString))
 {
-	throw new InvalidOperationException("❌ DATABASE_URL environment variable is not set!");
+	throw new InvalidOperationException("❌ Database connection string is not configured!");
 }
 
 if (builder.Environment.IsProduction())
@@ -93,6 +93,27 @@ else
 	builder.Services.AddDbContext<ApplicationDbContext>(options =>
 		options.UseSqlServer(connectionString));
 }
+
+// Helper function to convert Render PostgreSQL URL to connection string
+string ConvertPostgresUrl(string? databaseUrl)
+{
+	if (string.IsNullOrEmpty(databaseUrl))
+		return null;
+
+	try
+	{
+		var uri = new Uri(databaseUrl);
+		var userInfo = uri.UserInfo.Split(':');
+
+		return $"Host={uri.Host};Port={uri.Port};Database={uri.LocalPath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+	}
+	catch (Exception ex)
+	{
+		Console.WriteLine($"❌ Failed to parse DATABASE_URL: {ex.Message}");
+		return null;
+	}
+}
+
 
 //Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
