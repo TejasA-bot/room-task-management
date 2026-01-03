@@ -1,12 +1,12 @@
 <div class="container">
     <h1>Dashboard</h1>
   
-    <!-- Stats Cards -->
+    <!-- Stats Grid -->
     <div class="stats-grid">
       <mat-card>
         <mat-card-content>
           <div class="stat-content">
-            <mat-icon color="primary">task_alt</mat-icon>
+            <mat-icon color="primary">assignment</mat-icon>
             <div>
               <h2>{{ stats.totalTasks }}</h2>
               <p>Total Tasks</p>
@@ -18,10 +18,10 @@
       <mat-card>
         <mat-card-content>
           <div class="stat-content">
-            <mat-icon color="accent">schedule</mat-icon>
+            <mat-icon color="accent">pending_actions</mat-icon>
             <div>
-              <h2>{{ stats.activeTasks }}</h2>
-              <p>Active Tasks</p>
+              <h2>{{ stats.pendingTasks }}</h2>
+              <p>Pending Tasks</p>
             </div>
           </div>
         </mat-card-content>
@@ -30,10 +30,10 @@
       <mat-card>
         <mat-card-content>
           <div class="stat-content">
-            <mat-icon color="warn">pending_actions</mat-icon>
+            <mat-icon color="warn">people</mat-icon>
             <div>
-              <h2>{{ stats.myPendingTasks }}</h2>
-              <p>My Pending Tasks</p>
+              <h2>{{ stats.totalMembers }}</h2>
+              <p>Total Members</p>
             </div>
           </div>
         </mat-card-content>
@@ -42,20 +42,20 @@
       <mat-card>
         <mat-card-content>
           <div class="stat-content">
-            <mat-icon color="primary">people</mat-icon>
+            <mat-icon style="color: #4caf50;">check_circle</mat-icon>
             <div>
-              <h2>{{ stats.availableMembers }}</h2>
-              <p>Available Members</p>
+              <h2>{{ stats.completedToday }}</h2>
+              <p>Completed Today</p>
             </div>
           </div>
         </mat-card-content>
       </mat-card>
     </div>
   
-    <!-- Tasks Overview -->
+    <!-- Tasks List -->
     <mat-card class="tasks-card">
       <mat-card-header>
-        <mat-card-title>Current Tasks</mat-card-title>
+        <mat-card-title>Active Tasks</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <div class="tasks-list" *ngIf="tasks.length > 0; else noTasks">
@@ -63,37 +63,58 @@
             <mat-card-content>
               <div class="task-header">
                 <h3>{{ task.taskName }}</h3>
-                <mat-chip [color]="getStatusColor(task.currentStatus)" selected>
-                  {{ task.currentStatus }}
+                <mat-chip [color]="task.currentStatus === 'Completed' ? 'accent' : 
+                                   task.currentStatus === 'PendingApproval' ? 'warn' : 
+                                   'primary'" selected>
+                  {{ task.currentStatus || 'Ready' }}
                 </mat-chip>
               </div>
-              
-              <p class="task-description" *ngIf="task.description">{{ task.description }}</p>
-              
+  
+              <p class="task-description" *ngIf="task.description">
+                {{ task.description }}
+              </p>
+  
               <div class="task-info">
-                <span *ngIf="task.currentAssignedTo">
-                  <mat-icon>person</mat-icon>
-                  Assigned to: <strong>{{ task.currentAssignedTo }}</strong>
-                </span>
-                <span *ngIf="!task.currentAssignedTo">
-                  <mat-icon>check_circle</mat-icon>
-                  Available for triggering
+                <mat-icon>person</mat-icon>
+                <span>
+                  <strong>Current Turn:</strong> 
+                  {{ task.currentAssignedTo || 'Not assigned yet' }}
                 </span>
               </div>
   
               <div class="task-actions">
+                <!-- Trigger Button -->
                 <button mat-raised-button color="primary" 
                         (click)="triggerTask(task)"
                         [disabled]="!task.canTrigger">
                   <mat-icon>play_arrow</mat-icon>
-                  Trigger Task
+                  <span class="hide-mobile">Trigger Task</span>
+                  <span class="show-mobile">Trigger</span>
                 </button>
   
+                <!-- Complete Button -->
                 <button mat-raised-button color="accent" 
                         (click)="completeTask(task)"
                         *ngIf="task.currentAssignedTo === currentUser?.fullName && task.currentStatus === 'InProgress'">
                   <mat-icon>check</mat-icon>
-                  Mark Complete
+                  <span class="hide-mobile">Mark Complete</span>
+                  <span class="show-mobile">Complete</span>
+                </button>
+  
+                <!-- Approve Button -->
+                <button mat-raised-button color="primary" 
+                        (click)="approveTask(task)"
+                        *ngIf="task.currentStatus === 'PendingApproval' && canApprove(task)">
+                  <mat-icon>check_circle</mat-icon>
+                  <span>Approve</span>
+                </button>
+  
+                <!-- Reject Button -->
+                <button mat-raised-button color="warn" 
+                        (click)="rejectTask(task)"
+                        *ngIf="task.currentStatus === 'PendingApproval' && canApprove(task)">
+                  <mat-icon>cancel</mat-icon>
+                  <span>Reject</span>
                 </button>
               </div>
             </mat-card-content>
@@ -103,7 +124,7 @@
         <ng-template #noTasks>
           <div class="no-data">
             <mat-icon>inbox</mat-icon>
-            <p>No tasks available. Create your first task!</p>
+            <p>No active tasks. Create your first task!</p>
           </div>
         </ng-template>
       </mat-card-content>

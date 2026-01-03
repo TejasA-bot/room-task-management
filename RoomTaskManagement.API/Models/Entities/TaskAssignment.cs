@@ -24,6 +24,10 @@
 
 		/// <summary>Gets or sets the timestamp when the assignment was triggered.</summary>
 		public DateTime? TriggeredAt { get; set; } = DateTime.Now;
+
+		public int? ApprovedBy { get; set; }  // NEW
+		public DateTime? ApprovedAt { get; set; }  // NEW
+		public bool IsApproved { get; set; } = false;  // NEW
 		#endregion
 
 		//Navigation properties
@@ -36,5 +40,7 @@
 
 		/// <summary>Gets or sets the user who triggered the assignment.</summary>
 		public User? Triggerer { get; set; }
+
+		public User? Approver { get; set; }  // NEW
 	}
 }

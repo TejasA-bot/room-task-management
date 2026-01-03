@@ -17,7 +17,37 @@ body {
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
+  
+  @media (max-width: 768px) {
+    padding: 12px;
+  }
+}
+
+/* Responsive table */
+table {
+  width: 100%;
+  overflow-x: auto;
+  display: block;
+  
+  @media (min-width: 769px) {
+    display: table;
+  }
+}
+
+/* Responsive buttons */
+button {
+  @media (max-width: 768px) {
+    font-size: 14px !important;
+    padding: 8px 16px !important;
+  }
+}
+
+/* Hide text on small screens */
+.hide-mobile {
+  @media (max-width: 768px) {
+    display: none !important;
+  }
 }

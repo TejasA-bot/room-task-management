@@ -89,7 +89,10 @@ namespace RoomTaskManagement.API.Controllers
 			var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
 			var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
-			if (currentUserId != id && userRole != "SuperAdmin" || userRole != "Admin")
+			// Check permissions: User can toggle own status OR must be Admin/SuperAdmin to toggle others
+			bool canToggle = (currentUserId == id) || (userRole == "SuperAdmin" || userRole == "Admin");
+
+			if (!canToggle)
 			{
 				return Forbid();
 			}

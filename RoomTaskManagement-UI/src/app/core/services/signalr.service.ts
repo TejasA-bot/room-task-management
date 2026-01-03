@@ -29,8 +29,8 @@ export class SignalRService {
 
     this.hubConnection
       .start()
-      .then(() => console.log('SignalR Connected'))
-      .catch(err => console.error('SignalR Connection Error:', err));
+      .then(() => console.log('✅ SignalR Connected'))
+      .catch(err => console.error('❌ SignalR Error:', err));
 
     this.registerEvents();
   }
@@ -45,15 +45,85 @@ export class SignalRService {
     if (!this.isBrowser) return;
 
     this.hubConnection.on('ReceiveTaskTriggered', (data) => {
+      console.log('📨 Task triggered event received:', data);
+      
+      // Show browser notification
+      if (Notification.permission === 'granted') {
+        const notification = new Notification('🔔 Room Task Alert', {
+          body: `${data.taskName} - It's your turn, ${data.assignedTo}!`,
+          icon: '/assets/icons/icon-192x192.png',
+          badge: '/assets/icons/icon-72x72.png',
+          tag: 'task-triggered',
+          requireInteraction: true
+        });
+
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+
+        // Auto close after 15 seconds
+        setTimeout(() => notification.close(), 15000);
+      }
+      
       this.taskTriggered$.next(data);
     });
 
     this.hubConnection.on('ReceiveTaskCompleted', (data) => {
+      console.log('✅ Task completed event received:', data);
+      
+      if (Notification.permission === 'granted') {
+        const notification = new Notification('✅ Task Completed', {
+          body: `${data.taskName} completed by ${data.completedBy}`,
+          icon: '/assets/icons/icon-192x192.png',
+          tag: 'task-completed'
+        });
+
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+
+        setTimeout(() => notification.close(), 10000);
+      }
+      
       this.taskCompleted$.next(data);
     });
 
     this.hubConnection.on('ReceiveUserStatusChanged', (data) => {
+      console.log('👤 User status changed:', data);
       this.userStatusChanged$.next(data);
     });
+
+    this.hubConnection.on('ReceiveApprovalRequest', (data) => {
+        console.log('📝 Approval request:', data);
+        
+        if (Notification.permission === 'granted') {
+          const notification = new Notification('📝 Task Approval Needed', {
+            body: `${data.completedBy} marked "${data.taskName}" as complete. Please verify!`,
+            icon: '/assets/icons/icon-192x192.png',
+            tag: 'approval-request',
+            requireInteraction: true
+          });
+      
+          notification.onclick = () => {
+            window.focus();
+            notification.close();
+          };
+        }
+      });
+      
+      this.hubConnection.on('ReceiveTaskRejected', (data) => {
+        console.log('❌ Task rejected:', data);
+        
+        if (Notification.permission === 'granted') {
+          const notification = new Notification('❌ Task Rejected', {
+            body: `Your completion of "${data.taskName}" was rejected. Please redo it properly.`,
+            icon: '/assets/icons/icon-192x192.png',
+            tag: 'task-rejected',
+            requireInteraction: true
+          });
+        }
+      });      
   }
 }

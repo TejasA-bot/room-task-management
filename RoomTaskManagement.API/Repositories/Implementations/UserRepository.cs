@@ -15,6 +15,6 @@ namespace RoomTaskManagement.API.Repositories.Implementations
 
 		public async Task<IEnumerable<User>> GetActiveUsersAsync() => await _dbSet.Where(u => u.Role != "Deleted").ToListAsync();
 
-		public async Task<IEnumerable<User>> GetAvailableUsersAsync() => await _dbSet.Where(u => !u.IsOutOfStation).ToListAsync();
+		public async Task<IEnumerable<User>> GetAvailableUsersAsync() => await _dbSet.Where(u => !u.IsOutOfStation && u.Role != "SuperAdmin").ToListAsync();
 	}
 }

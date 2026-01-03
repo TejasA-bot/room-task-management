@@ -1,44 +1,39 @@
-.container {
-    padding: 24px;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
+.logo {
+    font-size: 20px;
+    font-weight: 500;
   
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-  
-    h1 {
-      margin: 0;
-    }
-  
-    button mat-icon {
-      margin-right: 8px;
+    @media (max-width: 768px) {
+      font-size: 16px;
     }
   }
   
-  .full-width {
-    width: 100%;
+  .spacer {
+    flex: 1 1 auto;
   }
   
-  table {
-    mat-chip {
-      font-size: 12px;
+  button {
+    margin: 0 4px;
+  
+    @media (max-width: 768px) {
+      padding: 0 8px !important;
+      min-width: auto !important;
+      
+      mat-icon {
+        margin-right: 0 !important;
+      }
+      
+      span {
+        display: none;
+      }
+    }
+    
+    &.active {
+      background-color: rgba(255, 255, 255, 0.1);
     }
   }
   
-  .no-data {
-    text-align: center;
-    padding: 48px 24px;
-    color: #999;
-  
-    mat-icon {
-      font-size: 64px;
-      width: 64px;
-      height: 64px;
-      margin-bottom: 16px;
-    }
+  .user-info {
+    padding: 8px 16px;
+    cursor: default;
   }
   

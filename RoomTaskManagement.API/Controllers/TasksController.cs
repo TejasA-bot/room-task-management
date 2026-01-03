@@ -97,20 +97,25 @@ namespace RoomTaskManagement.API.Controllers
 			});
 		}
 
-		[HttpPost("trigger")]
-		public async Task<IActionResult> TriggerTask([FromBody] TriggerTaskRequest request)
+		[HttpPost("{id}/trigger")]
+		public async Task<IActionResult> TriggerTask(int id)
 		{
-			if(request == null || request.TaskId < 1 || request.TriggeredBy < 1)
+			if (id < 1)
 			{
 				return BadRequest(new ApiResponse<object>
 				{
 					Success = false,
-					Message = "Invalid task trigger request"
+					Message = "Invalid task ID"
 				});
 			}
 
 			var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-			request.TriggeredBy = currentUserId;
+
+			var request = new TriggerTaskRequest
+			{
+				TaskId = id,
+				TriggeredBy = currentUserId
+			};
 
 			var result = await _taskService.TriggerTaskAsync(request);
 
@@ -129,6 +134,7 @@ namespace RoomTaskManagement.API.Controllers
 				Message = "Task triggered successfully. Notification sent to assigned user."
 			});
 		}
+
 
 		[HttpPost("{taskId}/complete")]
 		public async Task<IActionResult> CompleteTask(int taskId)
@@ -160,6 +166,51 @@ namespace RoomTaskManagement.API.Controllers
 				Message = "Task completed successfully"
 			});
 		}
+
+		[HttpPost("{taskId}/approve")]
+		public async Task<IActionResult> ApproveTask(int taskId)
+		{
+			var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+			var result = await _taskService.ApproveTaskAsync(taskId, currentUserId);
+
+			if (!result)
+			{
+				return BadRequest(new ApiResponse<object>
+				{
+					Success = false,
+					Message = "Cannot approve task. You may not be the triggerer."
+				});
+			}
+
+			return Ok(new ApiResponse<object>
+			{
+				Success = true,
+				Message = "Task approved successfully"
+			});
+		}
+
+		[HttpPost("{taskId}/reject")]
+		public async Task<IActionResult> RejectTask(int taskId)
+		{
+			var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+			var result = await _taskService.RejectTaskAsync(taskId, currentUserId);
+
+			if (!result)
+			{
+				return BadRequest(new ApiResponse<object>
+				{
+					Success = false,
+					Message = "Cannot reject task. You may not be the triggerer."
+				});
+			}
+
+			return Ok(new ApiResponse<object>
+			{
+				Success = true,
+				Message = "Task rejected - user notified to redo"
+			});
+		}
+
 
 		[HttpDelete("{id}")]
 		[Authorize(Roles = "SuperAdmin,Admin")]

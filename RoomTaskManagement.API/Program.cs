@@ -6,6 +6,7 @@ using RoomTaskManagement.API.BusinessLogic;
 using RoomTaskManagement.API.Data;
 using RoomTaskManagement.API.Helpers;
 using RoomTaskManagement.API.Hubs;
+using RoomTaskManagement.API.Models;
 using RoomTaskManagement.API.Repositories.Implementations;
 using RoomTaskManagement.API.Repositories.Interfaces;
 using RoomTaskManagement.API.Services.Implementations;
@@ -54,6 +55,11 @@ builder.Services.AddSwaggerGen(c =>
 	});
 });
 
+// Configure WhatsApp Settings
+builder.Services.Configure<WhatsAppSettings>(builder.Configuration.GetSection("WhatsAppSettings"));
+
+// Add HttpClientFactory
+builder.Services.AddHttpClient();
 
 //Database
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

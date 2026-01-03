@@ -69,6 +69,12 @@ namespace RoomTaskManagement.API.Data
 					.WithMany()
 					.HasForeignKey(e => e.TriggeredBy)
 					.OnDelete(DeleteBehavior.Restrict);
+
+				entity.HasOne(e => e.Approver)
+					.WithMany()
+					.HasForeignKey(e => e.ApprovedBy)
+					.OnDelete(DeleteBehavior.Restrict);
+
 			});
 
 			// TaskHistory configuration

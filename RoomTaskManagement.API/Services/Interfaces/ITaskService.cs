@@ -11,5 +11,9 @@ namespace RoomTaskManagement.API.Services.Interfaces
 		public Task<bool> TriggerTaskAsync(TriggerTaskRequest request);
 		public Task<bool> CompleteTaskAsync(int taskId, int userId);
 		public Task<bool> DeleteTaskAsync(int taskId);
+
+		public Task<bool> ApproveTaskAsync(int taskId, int approverId);
+		public Task<bool> RejectTaskAsync(int taskId, int approverId);
+
 	}
 }

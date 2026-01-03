@@ -4,6 +4,8 @@ using RoomTaskManagement.API.Models.Requests;
 using RoomTaskManagement.API.Repositories.Interfaces;
 using RoomTaskManagement.API.Services.Interfaces;
 using RoomTaskManagement.API.BusinessLogic;
+using Microsoft.AspNetCore.SignalR;
+using RoomTaskManagement.API.Hubs;
 
 namespace RoomTaskManagement.API.Services.Implementations
 {
@@ -15,6 +17,7 @@ namespace RoomTaskManagement.API.Services.Implementations
 		private readonly IUserRepository _userRepository;
 		private readonly TaskTurnCalculator _turnCalculator;
 		private readonly IWhatsAppService _whatsAppService;
+		private readonly IHubContext<TaskHub> _hubContext;
 
 		public TaskService(
 			ITaskRepository taskRepository,
@@ -22,7 +25,8 @@ namespace RoomTaskManagement.API.Services.Implementations
 			ITaskHistoryRepository taskHistoryRepository,
 			IUserRepository userRepository,
 			TaskTurnCalculator turnCalculator,
-			IWhatsAppService whatsAppService)
+			IWhatsAppService whatsAppService,
+			IHubContext<TaskHub> hubContext)
 		{
 			_taskRepository = taskRepository;
 			_taskAssignmentRepository = taskAssignmentRepository;
@@ -30,6 +34,7 @@ namespace RoomTaskManagement.API.Services.Implementations
 			_userRepository = userRepository;
 			_turnCalculator = turnCalculator;
 			_whatsAppService = whatsAppService;
+			_hubContext = hubContext;	
 		}
 
 		public async Task<IEnumerable<TaskDto>> GetAllTasksAsync()
@@ -160,8 +165,18 @@ namespace RoomTaskManagement.API.Services.Implementations
 
 			await _taskHistoryRepository.AddAsync(history);
 
-			// Send WhatsApp notification
-			await _whatsAppService.SendTaskNotificationAsync(nextUser.PhoneNumber, task.TaskName, nextUser.FullName);
+			//// Send WhatsApp notification
+			//await _whatsAppService.SendTaskNotificationAsync(nextUser.PhoneNumber, task.TaskName, nextUser.FullName);
+
+			// Send SignalR notification to ALL connected clients
+			await _hubContext.Clients.All.SendAsync("ReceiveTaskTriggered", new
+			{
+				taskId = task.Id,
+				taskName = task.TaskName,
+				assignedTo = nextUser.FullName,
+				assignedUserId = nextUser.Id,
+				timestamp = DateTime.Now
+			});
 
 			return true;
 		}
@@ -176,8 +191,8 @@ namespace RoomTaskManagement.API.Services.Implementations
 			if (activeAssignment == null || activeAssignment.UserId != userId)
 				return false;
 
-			activeAssignment.Status = "Completed";
-			activeAssignment.CompletedAt = DateTime.UtcNow;
+			activeAssignment.Status = "PendingApproval";
+			activeAssignment.CompletedAt = DateTime.Now;
 
 			await _taskAssignmentRepository.UpdateAsync(activeAssignment);
 
@@ -186,14 +201,109 @@ namespace RoomTaskManagement.API.Services.Implementations
 			{
 				TaskId = taskId,
 				UserId = userId,
-				Action = "Completed",
-				Timestamp = DateTime.UtcNow
+				Action = "PendingApproval",
+				Timestamp = DateTime.Now
 			};
+
+			// Notify triggerer for approval
+			if (activeAssignment.TriggeredBy.HasValue)
+			{
+				var triggerer = await _userRepository.GetByIdAsync(activeAssignment.TriggeredBy.Value);
+				var task = await _taskRepository.GetByIdAsync(taskId);
+				var completer = await _userRepository.GetByIdAsync(userId);
+
+				await _hubContext.Clients.All.SendAsync("ReceiveApprovalRequest", new
+				{
+					taskId = taskId,
+					taskName = task.TaskName,
+					completedBy = completer.FullName,
+					triggererId = triggerer.Id,
+					triggererName = triggerer.FullName,
+					timestamp = DateTime.UtcNow
+				});
+			}
 
 			await _taskHistoryRepository.AddAsync(history);
 
 			return true;
 		}
+
+		public async Task<bool> ApproveTaskAsync(int taskId, int approverId)
+		{
+			var activeAssignment = await _taskAssignmentRepository.GetActiveAssignmentForTaskAsync(taskId);
+
+			if (activeAssignment == null || activeAssignment.Status != "PendingApproval")
+				return false;
+
+			//// Only triggerer can approve
+			//if (activeAssignment.TriggeredBy != approverId)
+			//	return false;
+
+			activeAssignment.Status = "Completed";
+			activeAssignment.IsApproved = true;
+			activeAssignment.ApprovedBy = approverId;
+			activeAssignment.ApprovedAt = DateTime.Now;
+
+			await _taskAssignmentRepository.UpdateAsync(activeAssignment);
+
+			// Add to history
+			var history = new TaskHistory
+			{
+				TaskId = taskId,
+				UserId = activeAssignment.UserId,
+				Action = "Approved",
+				Timestamp = DateTime.Now
+			};
+			await _taskHistoryRepository.AddAsync(history);
+
+			// Notify all
+			var task = await _taskRepository.GetByIdAsync(taskId);
+			var completer = await _userRepository.GetByIdAsync(activeAssignment.UserId);
+
+			await _hubContext.Clients.All.SendAsync("ReceiveTaskCompleted", new
+			{
+				taskId = taskId,
+				taskName = task.TaskName,
+				completedBy = completer.FullName,
+				timestamp = DateTime.Now
+			});
+
+			return true;
+		}
+
+		public async Task<bool> RejectTaskAsync(int taskId, int approverId)
+		{
+			var activeAssignment = await _taskAssignmentRepository.GetActiveAssignmentForTaskAsync(taskId);
+
+			if (activeAssignment == null || activeAssignment.Status != "PendingApproval")
+				return false;
+
+			// Only triggerer can reject
+			if (activeAssignment.TriggeredBy != approverId)
+				return false;
+
+			// Reset to InProgress
+			activeAssignment.Status = "InProgress";
+			activeAssignment.CompletedAt = DateTime.Now;
+
+			await _taskAssignmentRepository.UpdateAsync(activeAssignment);
+
+			// Notify user
+			var task = await _taskRepository.GetByIdAsync(taskId);
+			var user = await _userRepository.GetByIdAsync(activeAssignment.UserId);
+
+			await _hubContext.Clients.All.SendAsync("ReceiveTaskRejected", new
+			{
+				taskId = taskId,
+				taskName = task.TaskName,
+				userId = user.Id,
+				userName = user.FullName,
+				timestamp = DateTime.UtcNow
+			});
+
+			return true;
+		}
+
 
 		public async Task<bool> DeleteTaskAsync(int taskId)
 		{
