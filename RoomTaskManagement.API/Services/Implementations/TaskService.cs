@@ -215,10 +215,10 @@ namespace RoomTaskManagement.API.Services.Implementations
 				await _hubContext.Clients.All.SendAsync("ReceiveApprovalRequest", new
 				{
 					taskId = taskId,
-					taskName = task.TaskName,
-					completedBy = completer.FullName,
-					triggererId = triggerer.Id,
-					triggererName = triggerer.FullName,
+					taskName = task?.TaskName,
+					completedBy = completer?.FullName,
+					triggererId = triggerer?.Id,
+					triggererName = triggerer?.FullName,
 					timestamp = DateTime.UtcNow
 				});
 			}
@@ -263,8 +263,8 @@ namespace RoomTaskManagement.API.Services.Implementations
 			await _hubContext.Clients.All.SendAsync("ReceiveTaskCompleted", new
 			{
 				taskId = taskId,
-				taskName = task.TaskName,
-				completedBy = completer.FullName,
+				taskName = task?.TaskName,
+				completedBy = completer?.FullName,
 				timestamp = DateTime.Now
 			});
 
@@ -295,9 +295,9 @@ namespace RoomTaskManagement.API.Services.Implementations
 			await _hubContext.Clients.All.SendAsync("ReceiveTaskRejected", new
 			{
 				taskId = taskId,
-				taskName = task.TaskName,
-				userId = user.Id,
-				userName = user.FullName,
+				taskName = task?.TaskName,
+				userId = user?.Id,
+				userName = user?.FullName,
 				timestamp = DateTime.UtcNow
 			});
 

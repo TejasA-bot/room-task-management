@@ -12,6 +12,7 @@ using RoomTaskManagement.API.Repositories.Interfaces;
 using RoomTaskManagement.API.Services.Implementations;
 using RoomTaskManagement.API.Services.Interfaces;
 using System.Text;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,7 +63,21 @@ builder.Services.Configure<WhatsAppSettings>(builder.Configuration.GetSection("W
 builder.Services.AddHttpClient();
 
 //Database
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+//builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+//Database
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (builder.Environment.IsProduction())
+{
+	builder.Services.AddDbContext<ApplicationDbContext>(options =>
+		options.UseNpgsql(connectionString));
+}
+else
+{
+	builder.Services.AddDbContext<ApplicationDbContext>(options =>
+		options.UseSqlServer(connectionString));
+}
+
 
 //Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -105,16 +120,28 @@ builder.Services.AddAuthentication(options =>
 });
 
 //CORS
+//builder.Services.AddCors(options =>
+//{
+//	options.AddPolicy("AllowAngular", policy =>
+//	{
+//		policy.WithOrigins("http://localhost:4200")
+//			   .AllowAnyHeader()
+//			   .AllowAnyMethod()
+//			   .AllowCredentials();
+//	});
+//});
+
+//CORS
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AllowAngular", policy =>
 	{
-		policy.WithOrigins("http://localhost:4200")
-			   .AllowAnyHeader()
-			   .AllowAnyMethod()
-			   .AllowCredentials();
+		policy.AllowAnyOrigin()
+			  .AllowAnyHeader()
+			  .AllowAnyMethod();
 	});
 });
+
 
 //SignalR
 builder.Services.AddSignalR();
@@ -135,6 +162,9 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Map SignalR Hub
-app.MapHub<TaskHub>("/taskHub");
+//app.MapHub<TaskHub>("/taskHub");
+// Map SignalR Hub
+app.MapHub<TaskHub>("/hubs/task");
+
 
 app.Run();
