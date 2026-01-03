@@ -95,7 +95,7 @@ else
 }
 
 // Helper function to convert Render PostgreSQL URL to connection string
-string ConvertPostgresUrl(string? databaseUrl)
+string? ConvertPostgresUrl(string? databaseUrl)
 {
 	if (string.IsNullOrEmpty(databaseUrl))
 		return null;
@@ -105,14 +105,30 @@ string ConvertPostgresUrl(string? databaseUrl)
 		var uri = new Uri(databaseUrl);
 		var userInfo = uri.UserInfo.Split(':');
 
-		return $"Host={uri.Host};Port={uri.Port};Database={uri.LocalPath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+		var username = userInfo[0];
+		var password = userInfo.Length > 1 ? userInfo[1] : "";
+		var host = uri.Host;
+		var port = uri.Port > 0 ? uri.Port : 5432; // Default PostgreSQL port
+		var database = uri.LocalPath.TrimStart('/');
+
+		var connString = $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+
+		Console.WriteLine($"✅ Converted PostgreSQL URL");
+		Console.WriteLine($"   Host: {host}");
+		Console.WriteLine($"   Port: {port}");
+		Console.WriteLine($"   Database: {database}");
+		Console.WriteLine($"   Username: {username}");
+
+		return connString;
 	}
 	catch (Exception ex)
 	{
 		Console.WriteLine($"❌ Failed to parse DATABASE_URL: {ex.Message}");
+		Console.WriteLine($"   Stack: {ex.StackTrace}");
 		return null;
 	}
 }
+
 
 
 //Repositories
